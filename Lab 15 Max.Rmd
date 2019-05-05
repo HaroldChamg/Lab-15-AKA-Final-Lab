@@ -1,0 +1,73 @@
+---
+title: "Lab 15"
+author: "Max Ward"
+date: "4/30/2019"
+output: html_document
+---
+
+```{r,echo=FALSE,message = FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(lubridate)
+library(dplyr)        
+library(fivethirtyeight)
+
+major <-college_recent_grads
+```
+####Which major has the highest median pay, and does the higher pay have any connection to whether or not you get a job related to your major?
+```{r,echo=FALSE,message = FALSE, warning=FALSE}
+final2 <- major%>%
+  group_by(major_category)%>%
+  select(major_category, median)
+```
+```{r,echo=FALSE,message = FALSE, warning=FALSE}
+ggplot(data = final2)+
+  geom_point(mapping = aes(x = median, y = major_category, color = major_category))
+```
+```{r,echo=FALSE,message = FALSE, warning=FALSE}
+final <- major%>%
+  group_by(major_category)
+summarise(final, avPay = mean(median))
+```
+As you can see from the graph and the data table Engineering tends to have the highest median pay.
+```{r,echo=FALSE,message = FALSE, warning=FALSE}
+perm_cor <- function(perms = 999, x, y)
+{
+  zero_vector = numeric(999)
+  for (i in c(1:perms))
+  {
+    mix_y= sample(y, length(y), replace=FALSE)
+    corr = cor(x, mix_y)
+    zero_vector[i] = (corr)
+  }
+  return(zero_vector)
+}
+```
+```{r,echo=FALSE,message = FALSE, warning=FALSE}
+Lab15 = perm_cor(perms=999,major$'median', major$'college_jobs')
+```
+```{r,echo=FALSE,message = FALSE, warning=FALSE}
+swag2 = cor(major$'median', major$'college_jobs')
+```
+```{r,echo=FALSE,message = FALSE, warning=FALSE}
+m3 <- as_tibble(Lab15)
+```
+```{r,echo=FALSE,message = FALSE, warning=FALSE}
+q2 <- sum(m3 > swag2)
+```
+```{r,echo=FALSE,message = FALSE, warning=FALSE}
+ggplot(data = m3)+
+  geom_histogram(mapping = aes(x= Lab15))+
+  geom_vline(xintercept = swag2, color = 'blue') +
+  ggtitle('Test Between Median and College Jobs')
+```
+```{r,echo=FALSE,message = FALSE, warning=FALSE}
+pval2 <- q2/1000
+pval2
+```
+Conclution: The graph and the p-value (the above number) show that there is very little correlation betweeen the majors median pay and if you get a job related to your major. So you might as well go for the one with the highest pay because your chance of getting a job related to you major is the same. I used a correlation permution test to see if the median pay and major jobs were related. This will help answer the overall team question of which major is best. 
+
+###Reflection on Lab 2
+
+####Max
+I would say that my goals have stayed pretty much the same but I would put more emphasis on the doing a job I enjoy over making money. This class has not changed that I think that is just more of a personal thing. I leanred how to code in r and I leanred how to work in groups a lot better and to contribute more when I do work in groups. I would tell myself to use my time in class better, but I would tell myself to keep using the resores that I have to my advantage like google and the book. 
