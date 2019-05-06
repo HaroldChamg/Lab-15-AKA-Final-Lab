@@ -1,0 +1,205 @@
+```{r}
+library(tidyverse)
+library(fivethirtyeight)
+library(modelr)
+library(stringr)
+
+data <- college_recent_grads
+```
+
+#Team Section
+We have been hired by a domain expert conducting research on **what would be the best type of degree for his son to study in college**.  The domain expert gathered data from the fivethirtyeight package in the R database, labeled "College_recent_grads".  In order to best answer his question, we created subquestions that when combined would help provide the answer.  This is an important question because many undergraduates face this question every year.  These questions include:
+
+* What degree type has the best unemployment(lowest) statistics?
+* What degree type generates the highest income?
+* What kind of jobs does the degree type create?  Ie are they using their degree after graduating
+* What can the popularity of a degree type tell us?
+
+
+After answering all of these individual  subsections, we concluded that an engineering degree type would be best for our domain experts son.  An engineering degree ranks similar  to all others in unemployment percentages, has the highest  median wage, and a majority of graduates use it in jobs after college.  Furthermore, they have a high ratio of men to women, which would apply for his son.  All of these answers can be realized within the plots created in our individual subsections.
+
+#Team goal(Lab 2)
+Our team goal for lab 2 was as follows: "Our goal for this semester is to be successful in the course, and learn about R and Data Science."
+We feel we achieved this goal very well, as  we all learned the tools of R and data science, and were all successful in this course.
+One thing we would keep doing as a team is strong communication
+One thing we could of started doing was going over the readings as a group to further our knowledge of the assessments.
+We could not find one thing that we would stop doing as a team.
+
+#Individual Subsections:
+
+
+
+**Jon Guay Individual:**
+
+Which type of major is the best when it comes to unemployment statistics?
+```{r,warning= FALSE,message=FALSE}
+data <- data %>%
+  select(`major_category`,`employed_fulltime`, "employed", `unemployment_rate`)
+
+model1 <- lm(`unemployment_rate`~employed * `major_category`, data = data)
+
+test <- data %>%
+  data_grid(employed,`major_category`) %>%
+  gather_predictions(model1)
+
+ ggplot(data = data, aes(employed, `unemployment_rate`, color = as.factor(`major_category`))) +
+             geom_jitter() +
+                geom_smooth(data = test, mapping = aes(y = pred), color =  "black") +
+   facet_wrap(~`major_category`)
+```
+
+
+Plots of each major category approximated with a linear model to test how unemployment rate changes as the number of employed workers increases
+We can see for certain majors such as engineering, that the unemployment rate increases as more people have the degree.  
+Perhaps this is because of a limitation of jobs, or degree difficulty.  Let us run more tests to figure it out.
+ 
+```{r,warning= FALSE,message=FALSE}
+data2 <- data %>%
+  arrange(desc(`unemployment_rate`))
+view(data2)
+data2
+```
+
+This data proves our linear model correct, the difficult majors do have higher unemployment rates.  This has to do with the signifcantly lower sample size
+Let us run a hypothesis test to  determine how similar an Engineering major is to say an art major with significantly higher total employment
+```{r,warning= FALSE,message=FALSE, echo=FALSE}
+data3 <- data %>%
+  filter(`major_category` == "Arts" | `major_category` == "Engineering")
+
+perm_mean <- function(perms = 1000, values, n1)
+{
+  ## Variables ##
+  # perms: The number of permutations 
+  # values (num): 
+  # n1 (int): Size of group 1
+  ###############
+  
+  # Step 1:
+  # Create vector of zeroes of length "perms" to store
+  # Permuted mean difference 
+  zerovector = numeric(1000)
+  
+  # Loop throught number of permutations
+  for (i in c(1:perms))
+  {
+    # Step 2:
+    # Randomly separate vector "values" into disjoint 
+    # groups of size "n1" and "length(values) - n1" respectively
+    test <- sample(values, length(values), replace = F)
+    group1 <- test[1:n1]
+    group2 <- test[1 + n1:length(values) -1 ]
+    # Step 3:
+    # Compute the sample means for the two groups from 
+    Meangroup1 <- mean(group1)
+    Meangroup2 <- mean(group2)
+    # Step 4: 
+    # Compute the difference in sample means, store the
+    # value in the vector from step 1
+    difference <- (Meangroup2 - Meangroup1)
+    zerovector[i] = difference
+  }
+  
+  # Step 5:
+  # Return new updated vector, created in step 1
+  return(zerovector)
+}
+plotdata <- perm_mean(1000, data3$unemployment_rate, 15)
+plotdata <- enframe(plotdata)
+ggplot(data = plotdata) +
+  geom_histogram(mapping = aes(x = value))
+forreport <- quantile(plotdata$value)
+view(forreport)
+```
+
+
+From this plot, we see graphically we have a p value of less than .05, so we can concur that the unemployment rates between two very different majors are in fact similar
+Overall, we cannot find a major distinction in careers based on employment from this dataset.
+And we can see clearly from our quantile's that we can accept our null hypothesis with the two being similar.
+
+
+**Answer to question:** Therefore, we can conclude that unemployment rate is not an extremely telling variable for types of major, due to the fact that many of the majors in this dataset experience similar levels of unemployment.
+
+
+
+The newest tool I used was implementation of a linear model.  I also used permutation tests and functions, as well as basic data manipulation that we learned in the beginning of the semester.
+
+
+
+
+Individual Reflection:
+After taking this course, I have found that my six month goals have changed.  I would like to get a mathematics related job, possibly data science, after graduation in order to save money for law school.  My five year goal remains the same, I would like to graduate from an elite law school and begin working as a lawyer that time.  I have also thought about enlisting as an officer in  the navy under the judge advocate general program, in which they pay for law school.  I have learned the basics of R in this course, and feel more confident with data manipulation and stattistics.  If I were to give myself advice, it would be to read more thoroughly before assessments for this course.  I would tell myself to stop getting so stressed, and keep up the good work ethic. 
+
+
+
+
+**Max Ward Individual**
+
+```{r,echo=FALSE,message = FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(lubridate)
+library(dplyr)        
+library(fivethirtyeight)
+
+major <-college_recent_grads
+```
+
+
+Which major has the highest median pay, and does the higher pay have any connection to whether or not you get a job related to your major?
+```{r,echo=FALSE,message = FALSE, warning=FALSE}
+final2 <- major%>%
+  group_by(major_category)%>%
+  select(major_category, median)
+```
+```{r,echo=FALSE,message = FALSE, warning=FALSE}
+ggplot(data = final2)+
+  geom_point(mapping = aes(x = median, y = major_category, color = major_category))
+```
+```{r,echo=FALSE,message = FALSE, warning=FALSE}
+final <- major%>%
+  group_by(major_category)
+summarise(final, avPay = mean(median))
+```
+As you can see from the graph and the data table Engineering tends to have the highest median pay.
+```{r,echo=FALSE,message = FALSE, warning=FALSE}
+perm_cor <- function(perms = 999, x, y)
+{
+  zero_vector = numeric(999)
+  for (i in c(1:perms))
+  {
+    mix_y= sample(y, length(y), replace=FALSE)
+    corr = cor(x, mix_y)
+    zero_vector[i] = (corr)
+  }
+  return(zero_vector)
+}
+```
+```{r,echo=FALSE,message = FALSE, warning=FALSE}
+Lab15 = perm_cor(perms=999,major$'median', major$'college_jobs')
+```
+```{r,echo=FALSE,message = FALSE, warning=FALSE}
+swag2 = cor(major$'median', major$'college_jobs')
+```
+```{r,echo=FALSE,message = FALSE, warning=FALSE}
+m3 <- as_tibble(Lab15)
+```
+```{r,echo=FALSE,message = FALSE, warning=FALSE}
+q2 <- sum(m3 > swag2)
+```
+```{r,echo=FALSE,message = FALSE, warning=FALSE}
+ggplot(data = m3)+
+  geom_histogram(mapping = aes(x= Lab15))+
+  geom_vline(xintercept = swag2, color = 'blue') +
+  ggtitle('Test Between Median and College Jobs')
+```
+```{r,echo=FALSE,message = FALSE, warning=FALSE}
+pval2 <- q2/1000
+pval2
+```
+Conclution: The graph and the p-value (the above number) show that there is very little correlation betweeen the majors median pay and if you get a job related to your major. So you might as well go for the one with the highest pay because your chance of getting a job related to you major is the same. I used a correlation permution test to see if the median pay and major jobs were related. This will help answer the overall team question of which major is best. 
+
+Reflection on Lab 2
+
+Max
+
+I would say that my goals have stayed pretty much the same but I would put more emphasis on the doing a job I enjoy over making money. This class has not changed that I think that is just more of a personal thing. I leanred how to code in r and I leanred how to work in groups a lot better and to contribute more when I do work in groups. I would tell myself to use my time in class better, but I would tell myself to keep using the resores that I have to my advantage like google and the book. 
