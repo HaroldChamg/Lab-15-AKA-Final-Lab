@@ -1,0 +1,119 @@
+---
+title: "Final Lab"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(lubridate)
+library(dplyr)        
+library(fivethirtyeight)
+grad <-college_recent_grads
+grad
+```
+
+Research question:
+I would like to see the top 3 majors to make money after graduation(use the median) for both gender, and see how likely do people studying in those majors.
+
+Also I want to see the correlation between the pay and Number with job not requiring a college degree
+
+
+```{r}
+grad1<-grad%>%
+filter(men > women)%>%
+arrange(desc(median))
+grad1
+```
+
+
+As you can see above the top 3 most paid major for men is Petroleum Engineering(110000), Mining And Mineral Engineering(75000), and Metallurgical Engineering(73000)
+
+```{r}
+grad2<-grad%>%
+  filter(men < women)%>%
+  arrange(desc(median))
+grad2
+```
+
+And the top 3 most paid major for women is Astronomy And Astrophysics(62000), Public Policy(50000), and Nursing(48000)
+
+```{r}
+grad%>%
+arrange(desc(men))
+```
+
+This shows that the most popular majors for males are not one of those will make them money. Althoug, engineering will makes the most money for males, many tended to majored in business.
+
+
+```{r}
+grad%>%
+arrange(desc(women))
+```
+
+The most popular majors for female are psychology, nursing, and biology. I feel like girls' interest are more likely to make them both, because "nursing" is on both list, whereas males popular majors have nothing to do with their "most money made" majors.
+
+
+
+
+
+```{r,echo=FALSE,message = FALSE, warning=FALSE}
+perm_cor <- function(perms = 999, x, y)
+{
+  zero_vector = numeric(999)
+  for (i in c(1:perms))
+  {
+    mix_y= sample(y, length(y), replace=FALSE)
+    corr = cor(x, mix_y)
+    zero_vector[i] = (corr)
+  }
+  return(zero_vector)
+}
+```
+
+
+
+```{r,echo=FALSE,message = FALSE, warning=FALSE}
+Corr = perm_cor(perms=999,grad$'median', grad$'non_college_jobs')
+Corr
+```
+
+
+```{r,echo=FALSE,message = FALSE, warning=FALSE}
+Corr2 = cor(grad$'median', grad$'non_college_jobs')
+Corr2
+```
+
+
+```{r,echo=FALSE,message = FALSE, warning=FALSE}
+CorrData <- as_tibble(Corr)
+CorrData
+```
+
+
+```{r,echo=FALSE,message = FALSE, warning=FALSE}
+lit <- sum(CorrData > Corr2)
+lit
+```
+
+
+```{r,echo=FALSE,message = FALSE, warning=FALSE}
+ggplot(data = CorrData)+
+  geom_histogram(mapping = aes(x= Corr))+
+  geom_vline(xintercept = Corr2, color = 'blue') +
+  ggtitle('                                                 Hypothsis Test')
+```
+
+
+As you can see from my correlation permution test, if you have a college degree or not would not affect your pay. The correlation between median pay and non_college_jobs barely has a correlation existed, meaning that even your job doesn't require a college degree, it doesn't mean you will be paid lower.
+
+
+
+Individually, write a paragraph reflecting on: how have your six-month or 5-year goals changed? What did you learn/accomplish in this course? If you could give yourself advice at the beginning of the semester, what would you tell yourself to keep doing, stop doing, and start doing: 
+
+My goal is never changed, which is making more money with my degree in information science. However, as I have mentioned before, I got a data analyst intern position at Centurlylink over the summer, which makes me feel like I am a little closer to my 5-year dream. I have learned how to code in R from this class, it is another tool for me to deal with data analytis, also makes my resume a lot more competetive. The advice for myself would be, keeping playing with the code outside of the class, this will give me more opportunity to practice my R ability. Sometimes, I skimed through the reading too fast, so I would say read the content more carefully. Start the reading one week before the quiz will make me more prepared for the quiz.
+
+
